@@ -60,3 +60,11 @@ vector<pair<int,int> > generateNextStates(int x,int y){
 bool invalidPoint(int x,int y){
     return x>=MAZE_SIZE || y>=MAZE_SIZE||maze[x][y]=='W';
 }
+
+bool isEndState(int x,int y){
+    for (auto& i:goalLocation)
+        if (maze[i.first][i.second]!='X')
+            return false;
+
+    return true;
+}
