@@ -1,0 +1,2 @@
+# Sokoban-problem
+The problem has an environment surrounded by a wall. There is a person, a set of n goal positions and the same number of boxes. The man must move n box to the goal positions. There is no difference between the goal positions. The man can only move in the free space. He can push boxes but cannot pull them. In intelligent solution will involve moving all boxes with minimum, number of steps. Here is an example of 9x9 array that represent the same environment to the right.
