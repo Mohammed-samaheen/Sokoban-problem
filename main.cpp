@@ -8,6 +8,8 @@ using namespace std;
 
 typedef vector<vector<char>> vvc;
 
+#define cell(grid, pos) grid[pos.row][pos.col]
+
 int const MAZE_SIZE = 9;
 const char MAN = 'M';
 const char BOX = 'B';
@@ -17,6 +19,7 @@ const char EMPTY = ' ';
 const char MAN_GOAL = 'Z';
 const char BOX_GOAL = 'X';
 const float TRAINING_FACTOR = 0.8;
+const float PROFIT_GOAL = 100.0;
 
 map < vvc, map<char, float> > Q;
 map < vvc, map<char, float> > R;
@@ -59,7 +62,6 @@ public:
 			return Move(this->move_row + recivedMove.move_row, this->move_col + recivedMove.move_col);
 		}
 
-
 		int move_row;
 		int move_col;
 	};
@@ -70,12 +72,10 @@ public:
 
 };
 
-
 class Grid {
 
 public:
 	Grid(int size) {
-		//vvc maze = vvc(size, vector<char>(size, ' '));
 		Grid(vvc(size, vector<char>(size, ' ')));
 	}
 
@@ -117,10 +117,13 @@ public:
 		for (int row = 0; row < maze.size(); row++) {
 			for (int col = 0; col < maze[row].size(); col++) {
 				if (maze[row][col] == BOX) {
-					isDeadlock(row, col);
+					if (isDeadlock(row, col)) {
+						return true;
+					}
 				}
 			}
 		}
+		return false;
 	}
 
 	Position getMan() {
@@ -133,18 +136,19 @@ private:
 	Position man;
 
 	bool isDeadlock(int row, int col) {
-		
+
+		bool res = false;
 		if ((isBorder(row - 1, col) || maze[row - 1][col] == WALL)) {
-			row = row - 1;
-			return (isBorder(row, col - 1) || maze[row][col - 1] == WALL) || (isBorder(row, col + 1) || maze[row][col + 1] == WALL);
+			row--;
+			res = res || (isBorder(row, col - 1) || maze[row][col - 1] == WALL) || (isBorder(row, col + 1) || maze[row][col + 1] == WALL);
 		}
 		
 		else if ((isBorder(row + 1, col) || maze[row + 1][col] == WALL)) {
-			row = row + 1;
-			return (isBorder(row, col - 1) || maze[row][col - 1] == WALL) || (isBorder(row, col + 1) || maze[row][col + 1] == WALL);
+			row++;
+			res = res || (isBorder(row, col - 1) || maze[row][col - 1] == WALL) || (isBorder(row, col + 1) || maze[row][col + 1] == WALL);
 		}
 
-		return false;
+		return res;
 	}
 
 	char isBorder(int row, int col) {
@@ -176,7 +180,60 @@ vvc MAZE = { {' ',' ',' ','W','W','W','W','W',' '},
 						   {' ','W',' ',' ',' ','G',' ',' ','W'},
 						   {' ','W','W','W','W','W','W','W','W'} };
 
+// TODO: test MACRO
+vvc getUpdatedMaze(Grid grid, Position::Move move) {
 
+	Position man = grid.getMan();
+	Position newMan = man + move;
+
+	vvc maze = grid.getMaze();
+
+	if (cell(maze, newMan) == BOX || cell(maze, newMan) == BOX_GOAL) {
+
+		Position nextNewMan = newMan + move;
+
+		if (cell(maze, nextNewMan) == EMPTY) {
+			cell(maze, nextNewMan) = BOX;
+		}
+		else if (cell(maze, nextNewMan) == GOAL) {
+			cell(maze, nextNewMan) = BOX_GOAL;
+		}
+		else {
+			return {};
+		}
+
+		if (cell(maze, newMan) == BOX) {
+			cell(maze, newMan) = EMPTY;
+		}
+		else {
+			cell(maze, newMan) = GOAL;
+		}
+	}
+
+	if (cell(maze, newMan) == EMPTY) {
+		cell(maze, newMan) = MAN;
+	}
+
+	else if (cell(maze, newMan) == GOAL) {
+		cell(maze, newMan) = MAN_GOAL;
+	}
+
+	else {
+		return {};
+	}
+
+	if (cell(maze, man) == MAN) {
+		cell(maze, man) = EMPTY;
+	}
+
+	else {
+		cell(maze, man) = GOAL;
+	}
+
+	return maze;
+}
+
+/*
 vvc getUpdatedMaze(Grid grid, Position::Move move) {
 
 	Position man = grid.getMan();
@@ -231,14 +288,18 @@ vvc getUpdatedMaze(Grid grid, Position::Move move) {
 
 	return maze;
 }
+*/
 
-
-bool isInvalidMove(Grid& grid, Position::Move move) {
+bool isInvalidMove(Grid grid, Position::Move move) {
 	Position pos = grid.getMan() + move;
 	vvc maze = grid.getMaze();
-	return pos.row < 0 || pos.col < 0 || pos.row >= maze.size() || pos.row >= maze.back().size() || maze[pos.row][pos.col] == WALL;
+	return pos.row < 0 || pos.col < 0 || pos.row >= maze.size() || (maze.size() > 0 && pos.row >= maze[0].size()) || cell(maze, pos)/*maze[pos.row][pos.col]*/ == WALL;
 }
 
+bool isEmptyCell(vvc state, Position pos) {
+	return !(pos.row < 0 || pos.col < 0 || pos.row >= state.size() || (state.size() > 0 && pos.row >= state[0].size())) && cell(state, pos) /*maze[pos.row][pos.col]*/ == EMPTY;
+
+}
 
 Grid getActionState(Grid& state, char action) {
 
@@ -265,23 +326,74 @@ map<char, Grid> getAllActionStates(Grid& grid) {
 	return actionStates;
 }
 
-// TOMOD:
-// TODO: Modify R to handle unvaild state and deadlock state somewhere
-float getNextQ_val(vvc pre_state, char pre_action) {
+float getNextQ_val(vvc current_state, char pre_action) {
 	float maxi = 0;
+	
+	vvc state = getUpdatedMaze(Grid(current_state), Position::Move(pre_action));
+	Grid grid = Grid(state);
 
-	vvc state = getUpdatedMaze(Grid(pre_state), Position::Move(pre_action));
+	if (R[current_state][pre_action] == -1 || grid.hasDeadlock() || !grid.isState()) {
+		return R[current_state][pre_action] = -1;
+	}
 
 	for (const auto& action : Q[state]) {
 		float val_q = Q[state][action.first];
 		max(maxi, val_q);
 	}
 
-	return R[pre_state][pre_action] + TRAINING_FACTOR * maxi;
+	return R[current_state][pre_action] + TRAINING_FACTOR * maxi;
 }
 
-//TODO:
+vvc generateGoalState(vvc maze) {
+	for (int row = 0; row < maze.size(); row++)	{
+		for (int col = 0; col < maze[row].size(); col++) {
+			if (maze[row][col] || maze[row][col] == BOX)
+				maze[row][col] = EMPTY;
+			else if (maze[row][col] == GOAL)
+				maze[row][col] = BOX_GOAL;
+		}
+	}
+	return maze;
+}
+
+vvc tryReachGoal(vvc state, Position pos, char ch) {
+	Position::Move move = Position::Move(ch);
+	Position prePos = pos + move;
+	if (isEmptyCell(state, prePos)) {
+		Position pre_2Pos = prePos + move;
+		if (isEmptyCell(state, pre_2Pos)) {
+
+			cell(state, pos) = GOAL;
+			cell(state, prePos) = BOX;
+			cell(state, pre_2Pos) = MAN;
+			/*
+			state[pos.row][pos.col] = GOAL;
+			state[prePos.row][prePos.col] = BOX;
+			state[pre_2Pos.row][pre_2Pos.col] = MAN;
+			*/
+			return state;
+		}
+	}
+	return {};
+}
+
 void fill_R() {
+	string direction = "udlr";
+	string invDirection = "durl";
+
+	vvc goalState = generateGoalState(MAZE);
+	for (int row = 0; row < goalState.size(); row++) {
+		for (int col = 0; col < goalState[row].size(); col++) {
+			if (goalState[row][col] == BOX_GOAL) {
+				for (int i = 0; i < direction.size(); i++) {
+					vvc preState = tryReachGoal(goalState, Position(row, col), direction[i]);
+					if (preState.size() == 0) continue;
+					char preMove = invDirection[i];
+					R[preState][preMove] = PROFIT_GOAL;
+				}
+			}
+		}
+	}
 	return;
 }
 
