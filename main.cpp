@@ -3,10 +3,14 @@
 #include <vector>
 #include <map>
 
-
 using namespace std;
 
 typedef vector<vector<char>> vvc;
+
+//TODO
+void printQ();
+void printR();
+void p2d(vvc maze);
 
 #define __Cell(grid, pos) grid[pos.row][pos.col]
 
@@ -20,7 +24,7 @@ const char MAN_GOAL = 'Z';
 const char BOX_GOAL = 'X';
 const char OUT = 'O';
 
-const int EPISODES = 10;
+const int EPISODES = 1000;
 const int INVALID_COAST = -1;
 
 const float TRAINING_FACTOR = 0.8;
@@ -55,11 +59,11 @@ public:
 
 		Move(char ch) {
 			switch (ch) {
-			case 'u': { Move(-1, 0); break; }
-			case 'd': { Move(1, 0); break; }
-			case 'l': { Move(0, -1); break; }
-			case 'r': { Move(0, 1); break; }
-			default: { Move(0, 0); }
+			case 'u': { new (this) Move(-1, 0); break; }
+			case 'd': { new (this) Move(1, 0); break; }
+			case 'l': { new (this) Move(0, -1); break; }
+			case 'r': { new (this) Move(0, 1); break; }
+			default: { new (this) Move(0, 0); }
 			}
 		}
 
@@ -76,16 +80,18 @@ public:
 	}
 
 };
+bool isTypeCell(vvc state, Position pos, char type);
+bool isTypeCell(vvc state, Position pos, vector<char> types);
 
 class Grid {
 
 public:
 	Grid(int size) {
-		Grid(vvc(size, vector<char>(size, ' ')));
+		new (this) Grid(vvc(size, vector<char>(size, ' ')));
 	}
 
 	Grid() {
-		Grid({});
+		new (this) Grid({});
 	}
 
 	Grid(vvc maze) {
@@ -135,29 +141,63 @@ public:
 		return man;
 	}
 
+	bool isOutBorder(Position pos) {
+		return isOutBorder(pos.row, pos.col);
+	}
+
+	bool isOutBorder(int row, int col) {
+		return (row < 0 || col < 0 || row >= maze.size() || maze.size() == 0 || col >= maze[0].size());
+	}
 private:
 	
 	vvc maze;
 	Position man;
 
+	// TODO: check
 	bool isDeadlock(int row, int col) {
 
-		bool res = false;
-		if ((isBorder(row - 1, col) || maze[row - 1][col] == WALL)) {
-			row--;
-			res = res || (isBorder(row, col - 1) || maze[row][col - 1] == WALL) || (isBorder(row, col + 1) || maze[row][col + 1] == WALL);
+
+		bool res = true;
+
+		Position pos = Position(row, col);
+
+		Position up = pos + Position::Move('u');
+		Position right = pos + Position::Move('r');
+		Position left = pos + Position::Move('l');
+		Position down = pos + Position::Move('d');
+
+		if (isOutBorder(up) || isTypeCell(maze, up, { WALL, BOX, BOX_GOAL, OUT })) {
+			if (isOutBorder(left) || isTypeCell(maze, left, { WALL, BOX, BOX_GOAL, OUT })) {
+				return true;
+			}
+			if (isOutBorder(right) || isTypeCell(maze, right, { WALL, BOX, BOX_GOAL, OUT })) {
+				return true;
+			}
+		}
+
+		if (isOutBorder(down) || isTypeCell(maze, down, { WALL, BOX, BOX_GOAL, OUT })) {
+			if (isOutBorder(left) || isTypeCell(maze, left, { WALL, BOX, BOX_GOAL, OUT })) {
+				return true;
+			}
+			if (isOutBorder(right) || isTypeCell(maze, right, { WALL, BOX, BOX_GOAL, OUT })) {
+				return true;
+			}
+		}
+
+		/*
+		if ((isOutBorder(row - 1, col) || maze[row - 1][col] == WALL)) {
+			//row--;
+			if ((isOutBorder(row, col - 1) || maze[row][col - 1] == WALL) || (isOutBorder(row, col + 1) || maze[row][col + 1] == WALL))
+				res = true;
 		}
 		
-		else if ((isBorder(row + 1, col) || maze[row + 1][col] == WALL)) {
-			row++;
-			res = res || (isBorder(row, col - 1) || maze[row][col - 1] == WALL) || (isBorder(row, col + 1) || maze[row][col + 1] == WALL);
-		}
+		else if ((isOutBorder(row + 1, col) || maze[row + 1][col] == WALL)) {
+			//row++;
+			if ((isOutBorder(row, col - 1) || maze[row][col - 1] == WALL) || (isOutBorder(row, col + 1) || maze[row][col + 1] == WALL))
+				res = true;
+		}*/
 
-		return res;
-	}
-
-	char isBorder(int row, int col) {
-		return (row < 0 || col < 0 || row >= maze.size() || maze.size() == 0 || col >= maze[0].size());
+		return false;
 	}
 
 	void getManPosition() {
@@ -175,20 +215,31 @@ private:
 
 };
 
-vvc MAZE = { {' ',' ',' ','W','W','W','W','W',' '},
+vvc MAZE =				 { {' ',' ',' ','W','W','W','W','W',' '},
 						   {' ','W','W','W',' ',' ',' ','W',' '},
 						   {' ','W','G',' ','B',' ',' ','W',' '},
-						   {' ','W','W','W',' ','B','G','W',' '},
+						   {' ','W','W','W','M','B','G','W',' '},
 						   {' ','W','G','W','W','B',' ','W',' '},
 						   {' ','W',' ','W',' ','G',' ','W','W'},
 						   {' ','W','B','B','G','B','B','G','W'},
 						   {' ','W',' ',' ',' ','G',' ',' ','W'},
 						   {' ','W','W','W','W','W','W','W','W'} };
 
-// TODO: test MACRO
+vvc MAZE2 =				 { {' ',' ',' ','W','W','W','W','W',' '},
+ {' ','W','W','W','W','W','W','W',' '},
+ {' ','W','W','W','W','W','W','W',' '},
+ {' ','W','G',' ','B',' ','M','W',' '},
+ {' ','W','W','W','W','W','W','W',' '},
+ {' ','W','W','W','W','W','W','W','W'},
+ {' ','W','W','W','W','W','W','W','W'},
+ {' ','W','W','W','W','W','W','W','W'},
+ {' ','W','W','W','W','W','W','W','W'} };
+
 vvc getUpdatedMaze(Grid grid, Position::Move move) {
 
 	Position man = grid.getMan();
+	if (man.col < 0) return {};
+
 	Position newMan = man + move;
 
 	vvc maze = grid.getMaze();
@@ -204,7 +255,7 @@ vvc getUpdatedMaze(Grid grid, Position::Move move) {
 			__Cell(maze, nextNewMan) = BOX_GOAL;
 		}
 		else {
-			return {};
+			return maze; //TODO: check if not return maze
 		}
 
 		if (__Cell(maze, newMan) == BOX) {
@@ -224,7 +275,7 @@ vvc getUpdatedMaze(Grid grid, Position::Move move) {
 	}
 
 	else {
-		return {};
+		return maze; // TODO: check not return maze
 	}
 
 	if (__Cell(maze, man) == MAN) {
@@ -238,73 +289,89 @@ vvc getUpdatedMaze(Grid grid, Position::Move move) {
 	return maze;
 }
 
-/*
-vvc getUpdatedMaze(Grid grid, Position::Move move) {
-
-	Position man = grid.getMan();
-	Position newMan = grid.getMan() + move;
-	int row = man.row, n_row = newMan.row;
-	int col = man.col, n_col = newMan.col;
-
-	vvc maze = grid.getMaze();
-
-	if (maze[n_row][n_col] == BOX || maze[n_row][n_col] == BOX_GOAL) {
-
-		int nn_row = n_row + move.move_row;
-		int nn_col = n_col + move.move_col;
-
-		if (maze[nn_row][nn_col] == EMPTY) {
-			maze[nn_row][nn_col] = BOX;
-		}
-		else if (maze[nn_row][nn_col] == GOAL) {
-			maze[nn_row][nn_col] = BOX_GOAL;
-		}
-		else {
-			return {};
-		}
-
-		if (maze[n_row][n_col] == BOX) {
-			maze[n_row][n_col] = EMPTY;
-		}
-		else {
-			maze[n_row][n_col] = GOAL;
-		}
-	}
-
-	if (maze[n_row][n_col] == EMPTY) {
-		maze[n_row][n_col] = MAN;
-	}
-
-	else if (maze[n_row][n_col] == GOAL) {
-		maze[n_row][n_col] = MAN_GOAL;
-	}
-
-	else {
-		return {};
-	}
-
-	if (maze[row][col] == MAN) {
-		maze[row][col] = EMPTY;
-	}
-
-	else {
-		maze[row][col] = GOAL;
-	}
-
-	return maze;
-}
-*/
-
 bool isInvalidMove(Grid grid, Position::Move move) {
 	Position pos = grid.getMan() + move;
 	vvc maze = grid.getMaze();
-	return pos.row < 0 || pos.col < 0 || pos.row >= maze.size() || (maze.size() > 0 && pos.row >= maze[0].size()) || __Cell(maze, pos) == WALL;
+	return grid.isOutBorder(pos) || isTypeCell(maze, pos, {WALL, OUT});
 }
 
 bool isTypeCell(vvc state, Position pos, char type) {
-	return !(pos.row < 0 || pos.col < 0 || pos.row >= state.size() || (state.size() > 0 && pos.row >= state[0].size())) && __Cell(state, pos) == type;
+	
+	if (Grid(state).isOutBorder(pos)) {
+		return false;
+	}
+
+	return  __Cell(state, pos) == type;
+}
+
+bool isTypeCell(vvc state, Position pos, vector<char> types) {
+	for (char type : types) {
+		if (isTypeCell(state, pos, type)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+void p2d(vvc v) {
+	for (auto it : v) {
+		for (auto a : it) {
+			cout << a << " ";
+		}
+		cout << endl;
+	}
+}
+
+void floodFill(vvc& grid, Position pos) {
+
+	if (!isTypeCell(grid, pos, EMPTY)) return;
+	__Cell(grid, pos) = OUT;
+
+	string dir = "udlr";
+	for (char ch : dir) {
+		floodFill(grid, pos + Position::Move(ch));
+	}
 
 }
+
+void fillMazeOut(vvc& maze) {
+	for (int i = 0; i < maze.size(); i++) {
+		floodFill(maze, Position(i, 0));
+		floodFill(maze, Position(i, maze[0].size() - 1));
+	}
+	for (int i = 0; i < maze[0].size(); i++) {
+		floodFill(maze, Position(0, i));
+		floodFill(maze, Position(maze.size() - 1, i));
+	}
+}
+
+bool isFinalGoal(Grid& grid) {
+	if (!grid.isState()) return false;
+	vvc maze = grid.getMaze();
+	for (const auto& row : maze) {
+		for (const auto& cell : row) {
+			if (cell == GOAL) {
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
+// return maze without man position
+vvc getAbstractMaze(Grid grid) {
+	
+	if (grid.getMan().row == -1) return grid.getMaze();
+	
+	vvc maze = grid.getMaze();
+	__Cell(maze, grid.getMan()) = EMPTY;
+	
+	return maze;
+}
+
+
+
+
 
 Grid getActionState(Grid& state, char action) {
 
@@ -316,6 +383,9 @@ Grid getActionState(Grid& state, char action) {
 	}
 	
 	maze = getUpdatedMaze(state, move);
+
+	if (state == maze)
+		return Grid();
 	return Grid(maze);
 }
 
@@ -326,10 +396,10 @@ map<char, Grid> getAllActionStates(Grid& grid) {
 		Grid state = getActionState(grid, action);
 		if (state.isState()) {
 			actionStates[action] = state;
-		}
-		else {
+		} // TODO: check in case else block is commented
+		/*else {
 			R[grid.getMaze()][action] = INVALID_COAST;
-		}
+		}*/
 	}
 	return actionStates;
 }
@@ -340,24 +410,26 @@ float calcTraingProfit(vvc current_state, char current_action) {
 	vvc state = getUpdatedMaze(Grid(current_state), Position::Move(current_action));
 	Grid grid = Grid(state);
 
-	if (R[current_state][current_action] == INVALID_COAST || grid.hasDeadlock() || !grid.isState()) {
+	//TODO
+	if (R[current_state][current_action] == INVALID_COAST || grid.hasDeadlock() /*|| !grid.isState()*/) {
 		R[current_state][current_action] = INVALID_COAST;
 	}
 	
 	else {
 		for (const auto& action : Q[state]) {
-			float val_q = Q[state][action.first];
+			float val_q = action.second;
 			max(maxi, val_q);
 		}
 	}
 
-	return R[current_state][current_action] + TRAINING_FACTOR * maxi;
+	return R[current_state][current_action] + (TRAINING_FACTOR * maxi);
 }
 
 vvc generateGoalState(vvc maze) {
 	for (int row = 0; row < maze.size(); row++)	{
 		for (int col = 0; col < maze[row].size(); col++) {
-			if (maze[row][col] || maze[row][col] == BOX)
+			// TODO: check if
+			if (maze[row][col] == MAN || maze[row][col] == BOX)
 				maze[row][col] = EMPTY;
 			else if (maze[row][col] == GOAL)
 				maze[row][col] = BOX_GOAL;
@@ -376,11 +448,6 @@ vvc tryReachGoal(vvc state, Position pos, char ch) {
 			__Cell(state, pos) = GOAL;
 			__Cell(state, prePos) = BOX;
 			__Cell(state, pre_2Pos) = MAN;
-			/*
-			state[pos.row][pos.col] = GOAL;
-			state[prePos.row][prePos.col] = BOX;
-			state[pre_2Pos.row][pre_2Pos.col] = MAN;
-			*/
 			return state;
 		}
 	}
@@ -394,36 +461,21 @@ void fill_R() {
 	vvc goalState = generateGoalState(MAZE);
 	for (int row = 0; row < goalState.size(); row++) {
 		for (int col = 0; col < goalState[row].size(); col++) {
+
 			if (goalState[row][col] == BOX_GOAL) {
 				for (int i = 0; i < direction.size(); i++) {
+
 					vvc preState = tryReachGoal(goalState, Position(row, col), direction[i]);
 					if (preState.size() == 0) continue;
 					char preMove = invDirection[i];
 					R[preState][preMove] = PROFIT_GOAL;
+
 				}
 			}
+
 		}
 	}
 	return;
-}
-
-bool isFinalGoal(Grid& grid) {
-	vvc maze = grid.getMaze();
-	for (const auto& row : maze) {
-		for (const auto& cell : row) {
-			if (cell == GOAL) {
-				return false;
-			}
-		}
-	}
-	return true;
-}
-
-vvc getAbstractMaze(Grid grid) {
-	if (!grid.isState()) return {};
-	vvc maze = grid.getMaze();
-	__Cell(maze, grid.getMan()) = EMPTY;
-	return maze;
 }
 
 vvc generateRandomState() {
@@ -444,18 +496,6 @@ vvc generateRandomState() {
 	return maze;
 }
 
-void floodFill(vvc& grid, Position pos) {
-	
-	if (!isTypeCell(grid, pos, EMPTY)) return;
-	__Cell(grid, pos) = OUT;
-	
-	string dir = "udlr";
-	for (char ch : dir) {
-		floodFill(grid, pos + Position::Move(ch));
-	}
-
-}
-
 pair<char, Grid> getRandomPossibleAction(map<char, Grid>& allActions) {
 	if (allActions.size() == 0) {
 		return make_pair(' ', Grid());
@@ -464,7 +504,7 @@ pair<char, Grid> getRandomPossibleAction(map<char, Grid>& allActions) {
 	while (true) {
 		int idx = rand() % actions.size();
 		char action = actions[idx];
-		if (allActions.find(action) != allActions.end() && R[allActions[action].getMaze()][action] != INVALID_COAST) {
+		if (allActions.find(action) != allActions.end()/* && R[allActions[action].getMaze()][action] != INVALID_COAST */&& allActions[action].isState()) {
 			return make_pair(action, allActions[action]);
 		}
 	}
@@ -472,10 +512,10 @@ pair<char, Grid> getRandomPossibleAction(map<char, Grid>& allActions) {
 
 void run() {
 	int episodes = EPISODES;
-
 	while (episodes--) {
+		int maxLoops = 5000;
 		Grid state = Grid(generateRandomState());
-		while (!isFinalGoal(state) && !state.hasDeadlock()) {
+		while (!isFinalGoal(state) && !state.hasDeadlock()/* && maxLoops--*/) {
 			
 			map<char, Grid> allActionState = getAllActionStates(state);
 			pair<char, Grid> actionsState = getRandomPossibleAction(allActionState);
@@ -483,6 +523,9 @@ void run() {
 			Grid nextState = actionsState.second;
 
 			float profit = calcTraingProfit(nextState.getMaze(), action);
+			if (profit > 0) {
+				cout << profit << " ";
+			}
 			Q[state.getMaze()][action] = profit;
 
 			state = nextState;
@@ -495,75 +538,62 @@ void run() {
 
 
 
+void solve(vvc maze) {
+	Grid grid = Grid(maze);
+	Position man = grid.getMan();
+	string dir = "udlr";
+	while (!isFinalGoal(grid)) {
+		int maxi = INT_MIN;
+		char best = 'u';
+		for (char move : dir) {
+			cout << Q[maze][move] << " ";
+			if (Q[maze][move] >= maxi) {
+				best = move;
+				maxi = Q[maze][move];
+			}
+		}
+
+		maze = getUpdatedMaze(grid, Position::Move(best));
+	}
+}
 
 
 
+void printQ() {
+	for (auto it : Q) {
+		for (auto i : it.second) {
+			if (i.second > 0) {
+				cout << i.second << endl;
+				p2d(it.first);
+			}
+		}
+	}
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-vector<pair<int, int> > goalLocation;
-bool invalidPoint(int x, int y);
-vector<pair<int, int> > generateNextStates(int x, int y);
-void findGoalLocation();
+void printR() {
+	for (auto it : R) {
+		for (auto i : it.second) {
+			if (i.second > 0) {
+				cout << i.second << endl;
+				p2d(it.first);
+			}
+		}
+	}
+}
 
 int main()
 {
-	findGoalLocation();
+
+	MAZE = MAZE2;
+	fillMazeOut(MAZE);
+
+
+	fill_R();
+	//p2d(MAZE);
+	run();
+	
+	printQ();
+	solve(MAZE);
 
 	return 0;
-}
-
-// find location (x,y) of each goal point
-void findGoalLocation() {
-	for (int i = 0; i < MAZE_SIZE; ++i)
-		for (int j = 0; j < MAZE_SIZE; ++j)
-			if (MAZE[i][j] == 'G')
-				goalLocation.emplace_back(i, j);
-}
-
-vector<pair<int, int> > generateNextStates(int x, int y) {
-	vector<pair<int, int> > validState;
-	int x_move[] = { 0,1,-1,0 };
-	int y_move[] = { 1,0,0,-1 };
-
-	for (int i = 0; i < 4; ++i) {
-		int next_x = x + x_move[i];
-		int next_y = y + y_move[i];
-
-		if (invalidPoint(next_x, next_y))
-			continue;
-		if (MAZE[next_x][next_y] == 'B') {
-			int _x = x + x_move[i];
-			int _y = y + y_move[i];
-
-			if (invalidPoint(_x, _y) || MAZE[_x][_y] == 'B')
-				continue;
-		}
-		validState.emplace_back(next_x, next_y);
-	}
-
-	return validState;
-}
-
-bool invalidPoint(int x, int y) {
-	return x >= MAZE_SIZE || y >= MAZE_SIZE || MAZE[x][y] == 'W';
-}
-
-bool isEndState(int x, int y) {
-	for (auto& i : goalLocation)
-		if (MAZE[i.first][i.second] != 'X')
-			return false;
-
-	return true;
 }
