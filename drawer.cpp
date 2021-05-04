@@ -6,16 +6,19 @@ using namespace std;
 int main()
 {
     sf::RenderWindow window(sf::VideoMode(500, 500), "Sokoban");
-    sf::RectangleShape rectangle(sf::Vector2f(20, 20));
+    sf::RectangleShape rectangle(sf::Vector2f(19, 19));
+    sf::CircleShape circle(8);
+    sf::CircleShape triangle(10, 3);
+
     vector<vector<char>> MAZE = { {' ',' ',' ','W','W','W','W','W',' '},
                                  {' ','W','W','W',' ',' ',' ','W',' '},
                                  {' ','W','G',' ','B',' ',' ','W',' '},
-                                 {' ','W','W','W',' ','B','G','W',' '},
-                                 {' ','W','G','W','W','B',' ','W',' '},
+                                 {' ','W','W','W','M','B','G','W',' '},
+                                 {' ','W','G','W','W','B',' ','W','X'},
                                  {' ','W',' ','W',' ','G',' ','W','W'},
-                                 {' ','W','B','B','G','B','B','G','W'},
-                                 {' ','W',' ',' ',' ','G',' ',' ','W'},
-                                 {' ','W','W','W','W','W','W','W','W'} };
+                                 {' ','W','B',' ','G','B','B','G','W'},
+                                 {' ','W',' ','Z',' ','G',' ',' ','W'},
+                                 {' ','O','W','W','W','W','W','W','W'} };
 
     
 
@@ -33,6 +36,8 @@ int main()
             for (int j = 0; j < 9; j++) {
                 sf::Vector2i position{ xPos, yPos };
                 rectangle.setPosition(sf::Vector2f(position));
+                triangle.setPosition(sf::Vector2f(position));
+                circle.setPosition(sf::Vector2f(position));
                 switch (MAZE[i][j]) {
                 case ' ':
                     rectangle.setFillColor(sf::Color::Transparent);
@@ -41,14 +46,28 @@ int main()
                     rectangle.setFillColor(sf::Color(125, 113, 71));
                     break;
                 case 'G':
-                    rectangle.setFillColor(sf::Color(216, 148, 133));
+                    rectangle.setFillColor(sf::Color::Transparent);
+                    circle.setFillColor(sf::Color(216, 148, 133));
+                    window.draw(circle);
                     break;
                 case 'B':
-                    rectangle.setFillColor(sf::Color(238, 184, 100));
+                    rectangle.setFillColor(sf::Color(91, 60, 30));
+                    break;
+                case 'Z':
+                    rectangle.setFillColor(sf::Color(255, 235, 0));
+                    break;
+                case 'X':
+                    rectangle.setFillColor(sf::Color(0, 255, 0));
+                    break;
+                case 'O':
+                    rectangle.setFillColor(sf::Color(255, 99, 71));
                     break;
                 case 'M':
-                    rectangle.setFillColor(sf::Color(43, 150, 237));
+                    rectangle.setFillColor(sf::Color::Transparent);
+                    triangle.setFillColor(sf::Color(51, 73, 237));
+                    window.draw(triangle);
                     break;
+
                 }
                 window.draw(rectangle);
 
