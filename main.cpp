@@ -183,19 +183,6 @@ private:
 			}
 		}
 
-		/*
-		if ((isOutBorder(row - 1, col) || maze[row - 1][col] == WALL)) {
-			//row--;
-			if ((isOutBorder(row, col - 1) || maze[row][col - 1] == WALL) || (isOutBorder(row, col + 1) || maze[row][col + 1] == WALL))
-				res = true;
-		}
-		
-		else if ((isOutBorder(row + 1, col) || maze[row + 1][col] == WALL)) {
-			//row++;
-			if ((isOutBorder(row, col - 1) || maze[row][col - 1] == WALL) || (isOutBorder(row, col + 1) || maze[row][col + 1] == WALL))
-				res = true;
-		}*/
-
 		return false;
 	}
 
@@ -393,7 +380,7 @@ map<char, Grid> getAllActionStates(Grid& grid) {
 		Grid state = getActionState(grid, action);
 		if (state.isState()) {
 			actionStates[action] = state;
-		} // TODO: check in case else block is commented
+		}
 		/*else {
 			R[grid.getMaze()][action] = INVALID_COAST;
 		}*/
@@ -409,17 +396,12 @@ float calcTraingProfit(vvc n_state) {
 	float maxi = 0;
 	string actions = "udlr";
 	
-	//TODO: check uncommented lines
 	for (const auto& action : Q[n_state]) {
 		float val_q = action.second;
 		maxi = max(maxi, val_q);
 	}
 
-	/*
-	for (const auto& action : actions) {
-		float val_q = Q[n_state][action];
-		maxi = max(maxi, val_q);
-	}*/
+
 
 	return maxi; 
 }
@@ -599,11 +581,9 @@ int main()
 
 	fillMazeOut(MAZE);
 
-
 	fill_R();
 	run();
 	
-	//printQ();
 	solve(MAZE);
 
 	return 0;
