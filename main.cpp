@@ -525,7 +525,7 @@ void solve(vvc maze) {
 	string dir = "udlr";
 	while (!isFinalGoal(grid)) {
 		maze = grid.getMaze();
-		int maxi = INT_MIN;
+		int maxi = -100;
 		char best = 'u';
 		for (char move : dir) {
 			cout << move << " " << Q[maze][move] << endl;
