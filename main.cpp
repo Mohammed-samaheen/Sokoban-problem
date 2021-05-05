@@ -320,6 +320,7 @@ void p2d(vvc v) {
 		}
 		cout << endl;
 	}
+	cout << endl;
 }
 
 void floodFill(vvc& grid, Position pos) {
@@ -369,10 +370,6 @@ vvc getAbstractMaze(Grid grid) {
 	return maze;
 }
 
-
-
-
-
 Grid getActionState(Grid& state, char action) {
 
 	vvc maze = state.getMaze();
@@ -389,6 +386,11 @@ Grid getActionState(Grid& state, char action) {
 	return Grid(maze);
 }
 
+
+
+
+
+
 map<char, Grid> getAllActionStates(Grid& grid) {
 	string actions = "udlr";
 	map<char, Grid> actionStates;
@@ -404,25 +406,19 @@ map<char, Grid> getAllActionStates(Grid& grid) {
 	return actionStates;
 }
 
-float calcTraingProfit(vvc current_state, char current_action) {
+
+float calcTraingProfit(vvc n_state) {
+	
+	Grid grid = Grid(n_state);
+
 	float maxi = 0;
-	
-	vvc state = getUpdatedMaze(Grid(current_state), Position::Move(current_action));
-	Grid grid = Grid(state);
-
-	//TODO
-	if (R[current_state][current_action] == INVALID_COAST || grid.hasDeadlock() /*|| !grid.isState()*/) {
-		R[current_state][current_action] = INVALID_COAST;
-	}
-	
-	else {
-		for (const auto& action : Q[state]) {
-			float val_q = action.second;
-			max(maxi, val_q);
-		}
+	string actions = "udlr";
+	for (const auto& action : actions) {
+		float val_q = Q[n_state][action];
+		maxi = max(maxi, val_q);
 	}
 
-	return R[current_state][current_action] + (TRAINING_FACTOR * maxi);
+	return maxi; 
 }
 
 vvc generateGoalState(vvc maze) {
@@ -513,7 +509,7 @@ pair<char, Grid> getRandomPossibleAction(map<char, Grid>& allActions) {
 void run() {
 	int episodes = EPISODES;
 	while (episodes--) {
-		int maxLoops = 5000;
+		int maxLoops = 100;
 		Grid state = Grid(generateRandomState());
 		while (!isFinalGoal(state) && !state.hasDeadlock()/* && maxLoops--*/) {
 			
@@ -522,11 +518,13 @@ void run() {
 			char action = actionsState.first;
 			Grid nextState = actionsState.second;
 
-			float profit = calcTraingProfit(nextState.getMaze(), action);
-			if (profit > 0) {
-				cout << profit << " ";
-			}
+
+
+			float max_q = calcTraingProfit(nextState.getMaze());
+
+			float profit = R[state.getMaze()][action] + TRAINING_FACTOR * max_q;
 			Q[state.getMaze()][action] = profit;
+
 
 			state = nextState;
 		}
@@ -546,14 +544,14 @@ void solve(vvc maze) {
 		int maxi = INT_MIN;
 		char best = 'u';
 		for (char move : dir) {
-			cout << Q[maze][move] << " ";
 			if (Q[maze][move] >= maxi) {
 				best = move;
 				maxi = Q[maze][move];
 			}
 		}
 
-		maze = getUpdatedMaze(grid, Position::Move(best));
+		grid = Grid(getUpdatedMaze(grid, Position::Move(best)));
+		p2d(grid.getMaze());
 	}
 }
 
@@ -562,10 +560,8 @@ void solve(vvc maze) {
 void printQ() {
 	for (auto it : Q) {
 		for (auto i : it.second) {
-			if (i.second > 0) {
-				cout << i.second << endl;
+				cout << i.first << " " << i.second << endl;
 				p2d(it.first);
-			}
 		}
 	}
 }
@@ -581,10 +577,26 @@ void printR() {
 	}
 }
 
+
+vvc temp =
+{ {' ',' ',' ','W','W','W','W','W',' '},
+  {' ','W','W','W','W','W','W','W',' '},
+  {' ','W','W','W','W','W','W','W',' '},
+  {' ','W','G','B','M',' ',' ','W',' '},
+  {' ','W','W','W','W','W','W','W',' '},
+  {' ','W','W','W','W','W','W','W','W'},
+  {' ','W','W','W','W','W','W','W','W'},
+  {' ','W','W','W','W','W','W','W','W'},
+  {' ','W','W','W','W','W','W','W','W'} };
+
 int main()
 {
 
 	MAZE = MAZE2;
+
+
+	//p2d(getUpdatedMaze(Grid(temp), Position::Move('l')));
+
 	fillMazeOut(MAZE);
 
 
@@ -592,7 +604,7 @@ int main()
 	//p2d(MAZE);
 	run();
 	
-	printQ();
+	//printQ();
 	solve(MAZE);
 
 	return 0;
