@@ -153,9 +153,7 @@ private:
 	vvc maze;
 	Position man;
 
-	// TODO: check
 	bool isDeadlock(int row, int col) {
-
 
 		bool res = true;
 
@@ -166,20 +164,20 @@ private:
 		Position left = pos + Position::Move('l');
 		Position down = pos + Position::Move('d');
 
-		if (isOutBorder(up) || isTypeCell(maze, up, { WALL, BOX, BOX_GOAL, OUT })) {
-			if (isOutBorder(left) || isTypeCell(maze, left, { WALL, BOX, BOX_GOAL, OUT })) {
+		if (isOutBorder(up) || isTypeCell(maze, up, { WALL/*, BOX, BOX_GOAL*/, OUT })) {
+			if (isOutBorder(left) || isTypeCell(maze, left, { WALL/*, BOX, BOX_GOAL*/, OUT })) {
 				return true;
 			}
-			if (isOutBorder(right) || isTypeCell(maze, right, { WALL, BOX, BOX_GOAL, OUT })) {
+			if (isOutBorder(right) || isTypeCell(maze, right, { WALL/*, BOX, BOX_GOAL*/, OUT })) {
 				return true;
 			}
 		}
 
-		if (isOutBorder(down) || isTypeCell(maze, down, { WALL, BOX, BOX_GOAL, OUT })) {
-			if (isOutBorder(left) || isTypeCell(maze, left, { WALL, BOX, BOX_GOAL, OUT })) {
+		if (isOutBorder(down) || isTypeCell(maze, down, { WALL/*, BOX, BOX_GOAL*/, OUT })) {
+			if (isOutBorder(left) || isTypeCell(maze, left, { WALL/*, BOX, BOX_GOAL*/, OUT })) {
 				return true;
 			}
-			if (isOutBorder(right) || isTypeCell(maze, right, { WALL, BOX, BOX_GOAL, OUT })) {
+			if (isOutBorder(right) || isTypeCell(maze, right, { WALL/*, BOX, BOX_GOAL*/, OUT })) {
 				return true;
 			}
 		}
@@ -225,15 +223,16 @@ vvc MAZE =				 { {' ',' ',' ','W','W','W','W','W',' '},
 						   {' ','W',' ',' ',' ','G',' ',' ','W'},
 						   {' ','W','W','W','W','W','W','W','W'} };
 
-vvc MAZE2 =				 { {' ',' ',' ','W','W','W','W','W',' '},
- {' ','W','W','W','W','W','W','W',' '},
- {' ','W','W','W','W','W','W','W',' '},
- {' ','W','G',' ','B',' ','M','W',' '},
- {' ','W','W','W','W','W','W','W',' '},
- {' ','W','W','W','W','W','W','W','W'},
- {' ','W','W','W','W','W','W','W','W'},
- {' ','W','W','W','W','W','W','W','W'},
- {' ','W','W','W','W','W','W','W','W'} };
+vvc MAZE2 =
+{ {' ',' ',' ','W','W','W','W','W',' '},
+  {' ','W','W','W','W','W','W','W',' '},
+  {' ','W','W','G',' ',' ',' ','W',' '},
+  {' ','W','W',' ','W',' ',' ','W',' '},
+  {' ','W','W','M','B',' ','W','W',' '},
+  {' ','W','W','W',' ',' ','W','W','W'},
+  {' ','W','G','B','B','W','W','W','W'},
+  {' ','W','W','W','G','W','W','W','W'},
+  {' ','W','W','W','W','W','W','W','W'} };
 
 vvc getUpdatedMaze(Grid grid, Position::Move move) {
 
@@ -386,11 +385,6 @@ Grid getActionState(Grid& state, char action) {
 	return Grid(maze);
 }
 
-
-
-
-
-
 map<char, Grid> getAllActionStates(Grid& grid) {
 	string actions = "udlr";
 	map<char, Grid> actionStates;
@@ -413,10 +407,18 @@ float calcTraingProfit(vvc n_state) {
 
 	float maxi = 0;
 	string actions = "udlr";
+	
+	//TODO: check uncommented lines
+	for (const auto& action : Q[n_state]) {
+		float val_q = action.second;
+		maxi = max(maxi, val_q);
+	}
+
+	/*
 	for (const auto& action : actions) {
 		float val_q = Q[n_state][action];
 		maxi = max(maxi, val_q);
-	}
+	}*/
 
 	return maxi; 
 }
@@ -509,8 +511,9 @@ pair<char, Grid> getRandomPossibleAction(map<char, Grid>& allActions) {
 void run() {
 	int episodes = EPISODES;
 	while (episodes--) {
-		int maxLoops = 100;
+		int maxLoops = 2000;
 		Grid state = Grid(generateRandomState());
+
 		while (!isFinalGoal(state) && !state.hasDeadlock()/* && maxLoops--*/) {
 			
 			map<char, Grid> allActionState = getAllActionStates(state);
@@ -518,15 +521,12 @@ void run() {
 			char action = actionsState.first;
 			Grid nextState = actionsState.second;
 
-
-
 			float max_q = calcTraingProfit(nextState.getMaze());
-
 			float profit = R[state.getMaze()][action] + TRAINING_FACTOR * max_q;
+
 			Q[state.getMaze()][action] = profit;
-
-
 			state = nextState;
+
 		}
 	}
 
@@ -541,9 +541,11 @@ void solve(vvc maze) {
 	Position man = grid.getMan();
 	string dir = "udlr";
 	while (!isFinalGoal(grid)) {
+		maze = grid.getMaze();
 		int maxi = INT_MIN;
 		char best = 'u';
 		for (char move : dir) {
+			cout << move << " " << Q[maze][move] << endl;
 			if (Q[maze][move] >= maxi) {
 				best = move;
 				maxi = Q[maze][move];
@@ -594,14 +596,10 @@ int main()
 
 	MAZE = MAZE2;
 
-
-	//p2d(getUpdatedMaze(Grid(temp), Position::Move('l')));
-
 	fillMazeOut(MAZE);
 
 
 	fill_R();
-	//p2d(MAZE);
 	run();
 	
 	//printQ();
