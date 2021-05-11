@@ -1,4 +1,4 @@
-
+#include <SFML/Graphics.hpp>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -7,6 +7,13 @@
 using namespace std;
 
 typedef vector<vector<char>> vvc;
+#define float long double
+
+
+sf::RenderWindow window(sf::VideoMode(500, 500), "Sokoban");
+sf::RectangleShape rectangle(sf::Vector2f(19, 19));
+sf::CircleShape circle(8);
+sf::CircleShape triangle(10, 6);
 
 //TODO
 void printQ();
@@ -29,7 +36,7 @@ const int EPISODES = 1000;
 const int INVALID_COAST = -1;
 
 const float TRAINING_FACTOR = 0.8;
-const float PROFIT_GOAL = 100.0;
+const float PROFIT_GOAL = 1000.0;
 
 map < vvc, map<char, float> > Q;
 map < vvc, map<char, float> > R;
@@ -149,6 +156,7 @@ public:
 	bool isOutBorder(int row, int col) {
 		return (row < 0 || col < 0 || row >= maze.size() || maze.size() == 0 || col >= maze[0].size());
 	}
+
 private:
 	
 	vvc maze;
@@ -221,6 +229,30 @@ vvc MAZE2 =
   {' ','W','G','B','B','W','W','W','W'},
   {' ','W','W','W','G','W','W','W','W'},
   {' ','W','W','W','W','W','W','W','W'} };
+
+
+vvc MAZE4 =
+{ {' ',' ',' ','W','W','W','W','W',' '},
+  {' ','W','W','W','W','W','W','W',' '},
+  {' ','W','W','G',' ',' ',' ','W',' '},
+  {' ','W','W',' ','W',' ',' ','W',' '},
+  {' ','W','W','M','B',' ','W','W',' '},
+  {' ','W','W','W',' ',' ','W','W','W'},
+  {' ','W','G','B','B','B','B','G','W'},
+  {' ','W','W','W','G','G','W','W','W'},
+  {' ','W','W','W','W','W','W','W','W'} };
+
+vvc MAZE3 =
+{{'W','W','W','W','W','W','W','W','W'},
+ {'W','W','W','W','W','W','W','W','W'},
+ {'W','W','W','W','W','W','W','W','W'},
+ {'W','W',' ',' ',' ','W','M',' ','W'},
+ {'W','W',' ',' ',' ',' ','B',' ','W'},
+ {'W','W',' ',' ',' ','W',' ',' ','W'},
+ {'W','W','W','W','W','W','B','G','W'},
+ {'W','W','W','W','W','W',' ','G','W'},
+ {'W','W','W','W','W','W','W','W','W'} };
+
 
 vvc getUpdatedMaze(Grid grid, Position::Move move) {
 
@@ -338,7 +370,7 @@ bool isFinalGoal(Grid& grid) {
 	vvc maze = grid.getMaze();
 	for (const auto& row : maze) {
 		for (const auto& cell : row) {
-			if (cell == GOAL) {
+			if (cell == GOAL || cell == BOX) {
 				return false;
 			}
 		}
@@ -378,7 +410,7 @@ map<char, Grid> getAllActionStates(Grid& grid) {
 	map<char, Grid> actionStates;
 	for (char action : actions) {
 		Grid state = getActionState(grid, action);
-		if (state.isState()) {
+		if (state.isState() && !state.hasDeadlock()) {
 			actionStates[action] = state;
 		}
 		/*else {
@@ -492,25 +524,36 @@ pair<char, Grid> getRandomPossibleAction(map<char, Grid>& allActions) {
 }
 
 void run() {
-	int episodes = EPISODES;
+	int episodes = 100;//EPISODES;
 	while (episodes--) {
-		int maxLoops = 2000;
+		int maxLoops = 500;
 		Grid state = Grid(generateRandomState());
-
-		while (!isFinalGoal(state) && !state.hasDeadlock()/* && maxLoops--*/) {
+		cout << episodes << endl;
+		while (!isFinalGoal(state) && !state.hasDeadlock() && maxLoops--) {
 			
 			map<char, Grid> allActionState = getAllActionStates(state);
+			if (allActionState.size() == 0) {
+				episodes++;
+				break;
+			}
 			pair<char, Grid> actionsState = getRandomPossibleAction(allActionState);
 			char action = actionsState.first;
 			Grid nextState = actionsState.second;
-
+			if (isFinalGoal(nextState)) {
+				cout << action << "^^^^^^" << Q[state.getMaze()][action] << endl;
+				p2d(state.getMaze());
+			}
 			float max_q = calcTraingProfit(nextState.getMaze());
 			float profit = R[state.getMaze()][action] + TRAINING_FACTOR * max_q;
 
 			Q[state.getMaze()][action] = profit;
-			state = nextState;
+
+		//	if (!nextState.hasDeadlock())
+				state = nextState;
+
 
 		}
+		//if (!isFinalGoal(state)) episodes++;
 	}
 
 }
@@ -574,6 +617,61 @@ vvc temp =
   {' ','W','W','W','W','W','W','W','W'},
   {' ','W','W','W','W','W','W','W','W'} };
 
+vvc getNextFram(vvc maze) {
+
+	Grid grid = Grid(maze);
+	string dir = "udlr";
+
+	int maxi = INT_MIN;
+	char best = 'u';
+	for (char move : dir) {
+		cout << move << " " << Q[maze][move] << endl;
+		if (Q[maze][move] >= maxi) {
+			best = move;
+			maxi = Q[maze][move];
+		}
+	}
+
+	grid = Grid(getUpdatedMaze(grid, Position::Move(best)));
+	cout << "$$$$$$$$$$$" << endl;
+	p2d(grid.getMaze());
+	return grid.getMaze();
+}
+
+
+class SokoPan {
+
+public:
+
+	SokoPan(map < vvc, map<char, float> >& Q) {
+		this->Q = Q;
+	}
+
+	void play(vvc maze) {
+
+	}
+
+	vvc getNextFram(vvc maze) {
+		Grid grid = Grid(maze);
+		string dir = "udlr";
+
+		int maxi = -100;
+		char best = 'u';
+		for (char move : dir) {
+			if (Q[maze][move] >= maxi) {
+				best = move;
+				maxi = Q[maze][move];
+			}
+		}
+
+		grid = Grid(getUpdatedMaze(grid, Position::Move(best)));
+		return grid.getMaze();
+	}
+
+private:
+	map < vvc, map<char, float> > Q;
+};
+
 int main()
 {
 
@@ -582,10 +680,100 @@ int main()
 	fillMazeOut(MAZE);
 
 	fill_R();
+	printR();
 	run();
-	
-	solve(MAZE);
 
+	vvc abd = MAZE;
+
+	while (window.isOpen())
+	{
+		sf::Event event;
+		while (window.pollEvent(event))
+		{
+			if (event.type == sf::Event::Closed)
+				window.close();
+		}
+
+		
+
+		int yPos = 0, xPos = 0;
+		for (int i = 0; i < 9; i++) {
+			for (int j = 0; j < 9; j++) {
+				sf::Vector2i position{ xPos, yPos };
+
+				rectangle.setPosition(sf::Vector2f(position));
+				triangle.setPosition(sf::Vector2f(position));
+				circle.setPosition(sf::Vector2f(position));
+
+				
+
+				switch (abd[i][j]) {
+				case ' ':
+					rectangle.setFillColor(sf::Color::Transparent);
+					break;
+				case 'W':
+					rectangle.setFillColor(sf::Color(125, 113, 71));
+					break;
+				case 'G':
+					rectangle.setFillColor(sf::Color::Transparent);
+					circle.setFillColor(sf::Color(216, 148, 133));
+					window.draw(circle);
+					break;
+				case 'B':
+					rectangle.setFillColor(sf::Color(91, 60, 30));
+					break;
+				case 'Z':
+					rectangle.setFillColor(sf::Color(255, 235, 0));
+					break;
+				case 'X':
+					rectangle.setFillColor(sf::Color(0, 255, 0));
+					break;
+				case 'O':
+					rectangle.setFillColor(sf::Color(255, 99, 71));
+					break;
+				case 'M':
+					rectangle.setFillColor(sf::Color::Transparent);
+					triangle.setFillColor(sf::Color(51, 73, 237));
+					window.draw(triangle);
+					break;
+
+				}
+				window.draw(rectangle);
+
+				xPos += 20;
+
+			}
+			yPos += 20;
+			xPos = 0;
+		}
+
+		window.display();
+
+		abd = getNextFram(abd);
+		
+		p2d(abd);
+		system("pause");
+		window.clear();
+	}
+
+	
+	//solve(MAZE);
+	system("cls");/*
+	for (int row = 0; row < abd.size(); row++)
+	{
+		for (int col = 0; col < abd[0].size(); col++) {
+			vvc vb = MAZE;
+			Grid temp = Grid(MAZE);
+			vb[temp.getMan().row][temp.getMan().col] = ' ';
+			if (MAZE[row][col] == EMPTY) {
+				vb[temp.getMan().row][temp.getMan().col] = MAN;
+				getNextFram(vb);
+				cout << endl;
+
+			}
+		}
+	}
+	*/
 	return 0;
 }
 
