@@ -77,7 +77,7 @@ vector<vector<char>> SokoPan::getAbstractMaze(Grid grid) {
 map < vector<vector<char>>, map<char, double> > SokoPan::train(sf::RenderWindow& window, bool isDraw) {
 	int episodes = 500;//EPISODES;
 	while (episodes--) {
-		int maxLoops = 100;
+		int maxLoops = 1000;
 		Grid state = Grid(generateRandomState());
 		cout << episodes << endl;
 		while (!isFinalGoal(state) && !state.hasDeadlock() && maxLoops--) {
