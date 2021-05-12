@@ -1,35 +1,23 @@
 #pragma once
 
-#include <bits/stdc++.h>
-#include <fstream>
-#include <map>
+#include "Utils.h"
 
-#include "lip/boost/archive/text_oarchive.hpp"
-#include "lip/boost/archive/text_iarchive.hpp"
-#include "lip/boost/serialization/vector.hpp"
-#include "lip/boost/serialization/map.hpp"
+Utils::Utils() {
+	return;
+}
 
-using namespace std;
+void  Utils::save(const string& filePath, map < vvc, map<char, float> >& data) {
+	ofstream ofs(filePath);
+	boost::archive::text_oarchive oa(ofs);
 
-void save(const string& filePath, map <vector<vector<char>>, map <char, int>>& data);
-map <vector<vector<char>>, map <char, int>> load(const string& filePath);
+	oa << data;
+}
 
-class Utils {
+map < vvc, map<char, float> > Utils::load(const string& filePath) {
+	map < vvc, map<char, float> > data;
+	ifstream ifs(filePath);
+	boost::archive::text_iarchive ia(ifs);
+	ia >> data;
+	return data;
 
-	void static save(const string& filePath, map <vector<vector<char>>, map <char, int>>& data) {
-		ofstream ofs(filePath);
-		boost::archive::text_oarchive oa(ofs);
-
-		oa << data;
-	}
-
-	map <vector<vector<char>>, map <char, int>> static load(const string& filePath) {
-		map <vector<vector<char>>, map <char, int>> data;
-		ifstream ifs(filePath);
-		boost::archive::text_iarchive ia(ifs);
-		ia >> data;
-		return data;
-
-	}
-
-};
+}

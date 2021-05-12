@@ -1,19 +1,22 @@
+#pragma once
+
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <map>
+#include "Utils.h"
+#include "LibConstant.hpp"
 
 using namespace std;
+using namespace LibConstants;
 
 typedef vector<vector<char>> vvc;
 #define float long double
 
 
 sf::RenderWindow window(sf::VideoMode(500, 500), "Sokoban");
-sf::RectangleShape rectangle(sf::Vector2f(19, 19));
-sf::CircleShape circle(8);
-sf::CircleShape triangle(10, 6);
+
 
 //TODO
 void printQ();
@@ -88,6 +91,7 @@ public:
 	}
 
 };
+
 bool isTypeCell(vvc state, Position pos, char type);
 bool isTypeCell(vvc state, Position pos, vector<char> types);
 
@@ -158,7 +162,7 @@ public:
 	}
 
 private:
-	
+
 	vvc maze;
 	Position man;
 
@@ -209,7 +213,7 @@ private:
 
 };
 
-vvc MAZE =				 { {' ',' ',' ','W','W','W','W','W',' '},
+vvc MAZE = { {' ',' ',' ','W','W','W','W','W',' '},
 						   {' ','W','W','W',' ',' ',' ','W',' '},
 						   {' ','W','G',' ','B',' ',' ','W',' '},
 						   {' ','W','W','W','M','B','G','W',' '},
@@ -242,8 +246,20 @@ vvc MAZE4 =
   {' ','W','W','W','G','G','W','W','W'},
   {' ','W','W','W','W','W','W','W','W'} };
 
+vvc OUTT =
+{ {' ', '0','1','2','3','4','5','6','7','8'},
+  {'0', ' ',' ',' ','W','W','W','W','W',' '},
+  {'1', ' ','W','W','W','W','W','W','W',' '},
+  {'2', ' ','W','W','G',' ',' ',' ','W',' '},
+  {'3', ' ','W','W',' ','W',' ',' ','W',' '},
+  {'4', ' ','W','W','M','B',' ','W','W',' '},
+  {'5', ' ','W','W','W',' ',' ','W','W','W'},
+  {'6', ' ','W','G','B','B','B','B','G','W'},
+  {'7', ' ','W','W','W','G','G','W','W','W'},
+  {'8', ' ','W','W','W','W','W','W','W','W'} };
+
 vvc MAZE3 =
-{{'W','W','W','W','W','W','W','W','W'},
+{ {'W','W','W','W','W','W','W','W','W'},
  {'W','W','W','W','W','W','W','W','W'},
  {'W','W','W','W','W','W','W','W','W'},
  {'W','W',' ',' ',' ','W','M',' ','W'},
@@ -253,6 +269,8 @@ vvc MAZE3 =
  {'W','W','W','W','W','W',' ','G','W'},
  {'W','W','W','W','W','W','W','W','W'} };
 
+
+void draw(sf::RenderWindow& window, vvc maze);
 
 vvc getUpdatedMaze(Grid grid, Position::Move move) {
 
@@ -311,11 +329,11 @@ vvc getUpdatedMaze(Grid grid, Position::Move move) {
 bool isInvalidMove(Grid grid, Position::Move move) {
 	Position pos = grid.getMan() + move;
 	vvc maze = grid.getMaze();
-	return grid.isOutBorder(pos) || isTypeCell(maze, pos, {WALL, OUT});
+	return grid.isOutBorder(pos) || isTypeCell(maze, pos, { WALL, OUT });
 }
 
 bool isTypeCell(vvc state, Position pos, char type) {
-	
+
 	if (Grid(state).isOutBorder(pos)) {
 		return false;
 	}
@@ -380,12 +398,12 @@ bool isFinalGoal(Grid& grid) {
 
 // return maze without man position
 vvc getAbstractMaze(Grid grid) {
-	
+
 	if (grid.getMan().row == -1) return grid.getMaze();
-	
+
 	vvc maze = grid.getMaze();
 	__Cell(maze, grid.getMan()) = EMPTY;
-	
+
 	return maze;
 }
 
@@ -397,7 +415,7 @@ Grid getActionState(Grid& state, char action) {
 	if (isInvalidMove(state, move)) {
 		return Grid();
 	}
-	
+
 	maze = getUpdatedMaze(state, move);
 
 	if (state == maze)
@@ -422,12 +440,12 @@ map<char, Grid> getAllActionStates(Grid& grid) {
 
 
 float calcTraingProfit(vvc n_state) {
-	
+
 	Grid grid = Grid(n_state);
 
 	float maxi = 0;
 	string actions = "udlr";
-	
+
 	for (const auto& action : Q[n_state]) {
 		float val_q = action.second;
 		maxi = max(maxi, val_q);
@@ -435,11 +453,11 @@ float calcTraingProfit(vvc n_state) {
 
 
 
-	return maxi; 
+	return maxi;
 }
 
 vvc generateGoalState(vvc maze) {
-	for (int row = 0; row < maze.size(); row++)	{
+	for (int row = 0; row < maze.size(); row++) {
 		for (int col = 0; col < maze[row].size(); col++) {
 			// TODO: check if
 			if (maze[row][col] == MAN || maze[row][col] == BOX)
@@ -492,7 +510,7 @@ void fill_R() {
 }
 
 vvc generateRandomState() {
-	
+
 	vvc maze = getAbstractMaze(Grid(MAZE));
 
 	if (maze.size() == 0) return {};
@@ -517,20 +535,20 @@ pair<char, Grid> getRandomPossibleAction(map<char, Grid>& allActions) {
 	while (true) {
 		int idx = rand() % actions.size();
 		char action = actions[idx];
-		if (allActions.find(action) != allActions.end()/* && R[allActions[action].getMaze()][action] != INVALID_COAST */&& allActions[action].isState()) {
+		if (allActions.find(action) != allActions.end()/* && R[allActions[action].getMaze()][action] != INVALID_COAST */ && allActions[action].isState()) {
 			return make_pair(action, allActions[action]);
 		}
 	}
 }
 
-void run() {
-	int episodes = 100;//EPISODES;
+void run(bool isDraw) {
+	int episodes = 500;//EPISODES;
 	while (episodes--) {
-		int maxLoops = 500;
+		int maxLoops = 1000;
 		Grid state = Grid(generateRandomState());
 		cout << episodes << endl;
 		while (!isFinalGoal(state) && !state.hasDeadlock() && maxLoops--) {
-			
+
 			map<char, Grid> allActionState = getAllActionStates(state);
 			if (allActionState.size() == 0) {
 				episodes++;
@@ -548,8 +566,13 @@ void run() {
 
 			Q[state.getMaze()][action] = profit;
 
-		//	if (!nextState.hasDeadlock())
-				state = nextState;
+			if (isDraw) {
+				draw(window, state.getMaze());
+
+			}
+
+			//	if (!nextState.hasDeadlock())
+			state = nextState;
 
 
 		}
@@ -588,8 +611,8 @@ void solve(vvc maze) {
 void printQ() {
 	for (auto it : Q) {
 		for (auto i : it.second) {
-				cout << i.first << " " << i.second << endl;
-				p2d(it.first);
+			cout << i.first << " " << i.second << endl;
+			p2d(it.first);
 		}
 	}
 }
@@ -622,7 +645,7 @@ vvc getNextFram(vvc maze) {
 	Grid grid = Grid(maze);
 	string dir = "udlr";
 
-	int maxi = INT_MIN;
+	float maxi = INT_MIN;
 	char best = 'u';
 	for (char move : dir) {
 		cout << move << " " << Q[maze][move] << endl;
@@ -635,6 +658,7 @@ vvc getNextFram(vvc maze) {
 	grid = Grid(getUpdatedMaze(grid, Position::Move(best)));
 	cout << "$$$$$$$$$$$" << endl;
 	p2d(grid.getMaze());
+	draw(window, grid.getMaze());
 	return grid.getMaze();
 }
 
@@ -672,108 +696,103 @@ private:
 	map < vvc, map<char, float> > Q;
 };
 
+void draw(sf::RenderWindow& window, vvc maze) {
+	sf::RectangleShape rectangle(sf::Vector2f(19, 19));
+	sf::CircleShape circle(8);
+	sf::CircleShape triangle(10, 6);
+
+	window.clear();
+
+	int yPos = 0, xPos = 0;
+	for (int i = 0; i < 9; i++) {
+		for (int j = 0; j < 9; j++) {
+			sf::Vector2i position{ xPos, yPos };
+
+			rectangle.setPosition(sf::Vector2f(position));
+			triangle.setPosition(sf::Vector2f(position));
+			circle.setPosition(sf::Vector2f(position));
+
+
+
+			switch (maze[i][j]) {
+			case ' ':
+				rectangle.setFillColor(sf::Color::Transparent);
+				break;
+			case 'W':
+				rectangle.setFillColor(sf::Color(125, 113, 71));
+				break;
+			case 'G':
+				rectangle.setFillColor(sf::Color::Transparent);
+				circle.setFillColor(sf::Color(216, 148, 133));
+				window.draw(circle);
+				break;
+			case 'B':
+				rectangle.setFillColor(sf::Color(91, 60, 30));
+				break;
+			case 'Z':
+				rectangle.setFillColor(sf::Color(255, 235, 0));
+				break;
+			case 'X':
+				rectangle.setFillColor(sf::Color(0, 255, 0));
+				break;
+			case 'O':
+				rectangle.setFillColor(sf::Color(255, 99, 71));
+				break;
+			case 'M':
+				rectangle.setFillColor(sf::Color::Transparent);
+				triangle.setFillColor(sf::Color(51, 73, 237));
+				window.draw(triangle);
+				break;
+
+			}
+			window.draw(rectangle);
+
+			xPos += 20;
+
+		}
+		yPos += 20;
+		xPos = 0;
+	}
+
+	window.display();
+
+}
+
 int main()
 {
 
-	MAZE = MAZE2;
-
+	MAZE = MAZE4;
 	fillMazeOut(MAZE);
 
 	fill_R();
 	printR();
-	run();
 
-	vvc abd = MAZE;
+	string fileName = "Text3.txt";
 
-	while (window.isOpen())
-	{
-		sf::Event event;
-		while (window.pollEvent(event))
-		{
-			if (event.type == sf::Event::Closed)
-				window.close();
-		}
-
-		
-
-		int yPos = 0, xPos = 0;
-		for (int i = 0; i < 9; i++) {
-			for (int j = 0; j < 9; j++) {
-				sf::Vector2i position{ xPos, yPos };
-
-				rectangle.setPosition(sf::Vector2f(position));
-				triangle.setPosition(sf::Vector2f(position));
-				circle.setPosition(sf::Vector2f(position));
-
-				
-
-				switch (abd[i][j]) {
-				case ' ':
-					rectangle.setFillColor(sf::Color::Transparent);
-					break;
-				case 'W':
-					rectangle.setFillColor(sf::Color(125, 113, 71));
-					break;
-				case 'G':
-					rectangle.setFillColor(sf::Color::Transparent);
-					circle.setFillColor(sf::Color(216, 148, 133));
-					window.draw(circle);
-					break;
-				case 'B':
-					rectangle.setFillColor(sf::Color(91, 60, 30));
-					break;
-				case 'Z':
-					rectangle.setFillColor(sf::Color(255, 235, 0));
-					break;
-				case 'X':
-					rectangle.setFillColor(sf::Color(0, 255, 0));
-					break;
-				case 'O':
-					rectangle.setFillColor(sf::Color(255, 99, 71));
-					break;
-				case 'M':
-					rectangle.setFillColor(sf::Color::Transparent);
-					triangle.setFillColor(sf::Color(51, 73, 237));
-					window.draw(triangle);
-					break;
-
-				}
-				window.draw(rectangle);
-
-				xPos += 20;
-
-			}
-			yPos += 20;
-			xPos = 0;
-		}
-
-		window.display();
-
-		abd = getNextFram(abd);
-		
-		p2d(abd);
-		system("pause");
-		window.clear();
-	}
-
+	run(true);
+	Utils::save(fileName, Q);
 	
-	//solve(MAZE);
-	system("cls");/*
-	for (int row = 0; row < abd.size(); row++)
-	{
-		for (int col = 0; col < abd[0].size(); col++) {
-			vvc vb = MAZE;
-			Grid temp = Grid(MAZE);
-			vb[temp.getMan().row][temp.getMan().col] = ' ';
-			if (MAZE[row][col] == EMPTY) {
-				vb[temp.getMan().row][temp.getMan().col] = MAN;
-				getNextFram(vb);
-				cout << endl;
+	map < vvc, map<char, float> > temp = Utils::load(fileName);
+	Q = temp;
+	//abd = getNextFram(abd);
 
-			}
+	int a, b;
+	while (cin >> a >> b) {
+		p2d(OUTT);
+		Grid g = Grid(MAZE);
+		vvc temp = MAZE;
+		__Cell(temp, g.getMan()) = EMPTY;
+		__Cell(temp, Position(a, b)) = MAN;
+		Grid r = Grid(temp);
+		while (!isFinalGoal(r)) {
+			temp = getNextFram(temp);
+			r = Grid(temp);
+			system("pause");
 		}
 	}
-	*/
+
+	window.close();
+
 	return 0;
 }
 
