@@ -13,15 +13,14 @@
 
 using namespace std;
 
-typedef vector<vector<char>> vvc;
 
 class Utils {
 
 public:
 	Utils();
-	void static save(const string& filePath, map < vvc, map<char, double> >& data);
-	map < vvc, map<char, double> > static load(const string& filePath);
-	void static p2d(vvc v);
-	void static draw(sf::RenderWindow& window, vvc maze);
+	void static save(const string& filePath, map < vector<vector<char>>, map<char, double> >& data);
+	map < vector<vector<char>>, map<char, double> > static load(const string& filePath);
+	void static p2d(vector<vector<char>> v);
+	void static draw(sf::RenderWindow& window, vector<vector<char>> maze);
 
 };

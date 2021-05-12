@@ -12,7 +12,6 @@
 
 using namespace std;
 
-typedef vector<vector<char>> vvc;
 using namespace LibConstants;
 
 #define __Cell(grid, pos) grid[pos.row][pos.col]
@@ -22,51 +21,51 @@ class SokoPan {
 
 public:
 
-	SokoPan(vvc maze);
+	SokoPan(vector<vector<char>> maze);
 
-	vvc static getUpdatedMaze(Grid grid, Position::Move move);
+	vector<vector<char>> static getUpdatedMaze(Grid grid, Position::Move move);
 
 	// return maze without man position
-	vvc static getAbstractMaze(Grid grid);
+	vector<vector<char>> static getAbstractMaze(Grid grid);
 
-	map < vvc, map<char, double> > train(sf::RenderWindow& window, bool isDraw);
+	map < vector<vector<char>>, map<char, double> > train(sf::RenderWindow& window, bool isDraw);
 
-	void solve(vvc maze);
+	void solve(vector<vector<char>> maze);
 
 	void printQ();
 
 	void printR();
 
-	vvc static getNextFram(map < vvc, map<char, double> >& Q, sf::RenderWindow& window, vvc maze);
+	vector<vector<char>> static getNextFram(map < vector<vector<char>>, map<char, double> >& Q, sf::RenderWindow& window, vector<vector<char>> maze);
 
 	bool isFinalGoal(Grid& grid);
 
 private:
 
-	vvc MAZE;
+	vector<vector<char>> MAZE;
 
-	map < vvc, map<char, double> > Q;
-	map < vvc, map<char, double> > R;
+	map < vector<vector<char>>, map<char, double> > Q;
+	map < vector<vector<char>>, map<char, double> > R;
 
 	bool isInvalidMove(Grid grid, Position::Move move);
 
-	void floodFill(vvc& grid, Position pos);
+	void floodFill(vector<vector<char>>& grid, Position pos);
 
-	void fillMazeOut(vvc& maze);
+	void fillMazeOut(vector<vector<char>>& maze);
 
 	Grid getActionState(Grid& state, char action);
 
 	map<char, Grid> getAllActionStates(Grid& grid);
 
-	double calcTraingProfit(vvc n_state);
+	double calcTraingProfit(vector<vector<char>> n_state);
 
-	vvc generateGoalState(vvc maze);
+	vector<vector<char>> generateGoalState(vector<vector<char>> maze);
 
-	vvc tryReachGoal(vvc state, Position pos, char ch);
+	vector<vector<char>> tryReachGoal(vector<vector<char>> state, Position pos, char ch);
 
 	void fill_R();
 
-	vvc generateRandomState();
+	vector<vector<char>> generateRandomState();
 
 	pair<char, Grid> getRandomPossibleAction(map<char, Grid>& allActions);
 

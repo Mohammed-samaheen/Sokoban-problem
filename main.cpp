@@ -14,12 +14,10 @@
 using namespace std;
 using namespace LibConstants;
 
-#define vvc vector<vector<char>>
-
 sf::RenderWindow window(sf::VideoMode(500, 500), "Sokoban");
 
 
-vvc MAZE =
+vector<vector<char>> MAZE =
 { {' ',' ',' ','W','W','W','W','W',' '},
 					   {' ','W','W','W',' ',' ',' ','W',' '},
 					   {' ','W','G',' ','B',' ',' ','W',' '},
@@ -30,7 +28,7 @@ vvc MAZE =
 					   {' ','W',' ',' ',' ','G',' ',' ','W'},
 					   {' ','W','W','W','W','W','W','W','W'} };
 
-vvc MAZE2 =
+vector<vector<char>> MAZE2 =
 { {' ',' ',' ','W','W','W','W','W',' '},
   {' ','W','W','W','W','W','W','W',' '},
   {' ','W','W','G',' ',' ',' ','W',' '},
@@ -41,7 +39,7 @@ vvc MAZE2 =
   {' ','W','W','W','G','W','W','W','W'},
   {' ','W','W','W','W','W','W','W','W'} };
 
-vvc MAZE4 =
+vector<vector<char>> MAZE4 =
 { {' ',' ',' ','W','W','W','W','W',' '},
   {' ','W','W','W','W','W','W','W',' '},
   {' ','W','W','G',' ',' ',' ','W',' '},
@@ -52,7 +50,7 @@ vvc MAZE4 =
   {' ','W','W','W','G','G','W','W','W'},
   {' ','W','W','W','W','W','W','W','W'} };
 
-vvc MAZE3 =
+vector<vector<char>> MAZE3 =
 { {'W','W','W','W','W','W','W','W','W'},
  {'W','W','W','W','W','W','W','W','W'},
  {'W','W','W','W','W','W','W','W','W'},
@@ -62,6 +60,7 @@ vvc MAZE3 =
  {'W','W','W','W','W','W','B','G','W'},
  {'W','W','W','W','W','W',' ','G','W'},
  {'W','W','W','W','W','W','W','W','W'} };
+
 int main()
 {
 
@@ -69,7 +68,7 @@ int main()
 
 	string fileName = "Text3.txt";
 
-	map < vvc, map<char, double> > Q;
+	map < vector<vector<char>>, map<char, double> > Q;
 
 	Q = sokoPan.train(window, true);
 	Utils::save(fileName, Q);
@@ -80,7 +79,7 @@ int main()
 	while (cin >> a >> b) {
 		Utils::p2d(MAZE);
 		Grid g = Grid(MAZE);
-		vvc temp = MAZE;
+		vector<vector<char>> temp = MAZE;
 		__Cell(temp, g.getMan()) = EMPTY;
 		__Cell(temp, Position(a, b)) = MAN;
 		Grid r = Grid(temp);

@@ -6,15 +6,15 @@ Utils::Utils() {
 	return;
 }
 
-void  Utils::save(const string& filePath, map < vvc, map<char, double> >& data) {
+void  Utils::save(const string& filePath, map < vector<vector<char>>, map<char, double> >& data) {
 	ofstream ofs(filePath);
 	boost::archive::text_oarchive oa(ofs);
 
 	oa << data;
 }
 
-map < vvc, map<char, double> > Utils::load(const string& filePath) {
-	map < vvc, map<char, double> > data;
+map < vector<vector<char>>, map<char, double> > Utils::load(const string& filePath) {
+	map < vector<vector<char>>, map<char, double> > data;
 	ifstream ifs(filePath);
 	boost::archive::text_iarchive ia(ifs);
 	ia >> data;
@@ -22,7 +22,7 @@ map < vvc, map<char, double> > Utils::load(const string& filePath) {
 
 }
 
-void Utils::draw(sf::RenderWindow& window, vvc maze) {
+void Utils::draw(sf::RenderWindow& window, vector<vector<char>> maze) {
 	sf::RectangleShape rectangle(sf::Vector2f(19, 19));
 	sf::CircleShape circle(8);
 	sf::CircleShape triangle(10, 6);
@@ -82,7 +82,7 @@ void Utils::draw(sf::RenderWindow& window, vvc maze) {
 
 }
 
-void Utils::p2d(vvc v) {
+void Utils::p2d(vector<vector<char>> v) {
 	for (auto it : v) {
 		for (auto a : it) {
 			cout << a << " ";

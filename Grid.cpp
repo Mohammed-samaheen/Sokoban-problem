@@ -3,23 +3,23 @@
 #include "Grid.h"
 
 Grid::Grid(int size) {
-	new (this) Grid(vvc(size, vector<char>(size, ' ')));
+	new (this) Grid(vector<vector<char>>(size, vector<char>(size, ' ')));
 }
 
 Grid::Grid() {
 	new (this) Grid({});
 }
 
-Grid::Grid(vvc maze) {
+Grid::Grid(vector<vector<char>> maze) {
 	this->maze = maze;
 	getManPosition();
 }
 
-vvc Grid::getMaze() {
+vector<vector<char>> Grid::getMaze() {
 	return this->maze;
 }
 
-bool Grid::operator==(vvc& recivedMaze) {
+bool Grid::operator==(vector<vector<char>>& recivedMaze) {
 
 	if (maze.size() != recivedMaze.size() || (maze.size() > 0 && maze[0].size() != recivedMaze[0].size())) {
 		return false;
@@ -65,7 +65,7 @@ bool Grid::isOutBorder(int row, int col) {
 	return (row < 0 || col < 0 || row >= maze.size() || maze.size() == 0 || col >= maze[0].size());
 }
 
-bool Grid::isTypeCell(vvc state, Position pos, char type) {
+bool Grid::isTypeCell(vector<vector<char>> state, Position pos, char type) {
 
 	if (Grid(state).isOutBorder(pos)) {
 		return false;
@@ -74,7 +74,7 @@ bool Grid::isTypeCell(vvc state, Position pos, char type) {
 	return  __Cell(state, pos) == type;
 }
 
-bool Grid::isTypeCell(vvc state, Position pos, vector<char> types) {
+bool Grid::isTypeCell(vector<vector<char>> state, Position pos, vector<char> types) {
 	for (char type : types) {
 		if (isTypeCell(state, pos, type)) {
 			return true;

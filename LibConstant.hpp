@@ -3,10 +3,6 @@
 #ifndef MYLIB_CONSTANTS_H
 #define MYLIB_CONSTANTS_H
 
-typedef vector<vector<char>> vvc;
-
-
-
 //  File Name : LibConstants.hpp    Purpose : Global Constants for Lib Utils
 namespace LibConstants
 {
@@ -26,7 +22,6 @@ namespace LibConstants
 
 	const float TRAINING_FACTOR = 0.8;
 	const float PROFIT_GOAL = 1000.0;
-
 
 }
 #endif 

@@ -11,7 +11,7 @@ using namespace std;
 using namespace LibConstants;
 
 #define __Cell(grid, pos) grid[pos.row][pos.col]
-typedef vector<vector<char>> vvc;
+ 
 
 
 class Grid {
@@ -21,11 +21,11 @@ public:
 
 	Grid();
 
-	Grid(vvc maze);
+	Grid(vector<vector<char>> maze);
 
-	vvc getMaze();
+	vector<vector<char>> getMaze();
 
-	bool operator==(vvc& recivedMaze);
+	bool operator==(vector<vector<char>>& recivedMaze);
 
 	bool isState();
 
@@ -37,13 +37,13 @@ public:
 
 	bool isOutBorder(int row, int col);
 
-	bool static isTypeCell(vvc state, Position pos, char type);
+	bool static isTypeCell(vector<vector<char>> state, Position pos, char type);
 
-	bool static isTypeCell(vvc state, Position pos, vector<char> types);
+	bool static isTypeCell(vector<vector<char>> state, Position pos, vector<char> types);
 
 private:
 
-	vvc maze;
+	vector<vector<char>> maze;
 	Position man;
 
 	bool isDeadlock(int row, int col);

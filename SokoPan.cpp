@@ -2,21 +2,21 @@
 
 #include "SokoPan.h"
 
-SokoPan::SokoPan(vvc maze) {
+SokoPan::SokoPan(vector<vector<char>> maze) {
 	this->MAZE = maze;
 	fillMazeOut(MAZE);
 	fill_R();
 
 }
 
-vvc SokoPan::getUpdatedMaze(Grid grid, Position::Move move) {
+vector<vector<char>> SokoPan::getUpdatedMaze(Grid grid, Position::Move move) {
 
 	Position man = grid.getMan();
 	if (man.col < 0) return {};
 
 	Position newMan = man + move;
 
-	vvc maze = grid.getMaze();
+	vector<vector<char>> maze = grid.getMaze();
 
 	if (__Cell(maze, newMan) == BOX || __Cell(maze, newMan) == BOX_GOAL) {
 
@@ -64,20 +64,20 @@ vvc SokoPan::getUpdatedMaze(Grid grid, Position::Move move) {
 }
 
 // return maze without man position
-vvc SokoPan::getAbstractMaze(Grid grid) {
+vector<vector<char>> SokoPan::getAbstractMaze(Grid grid) {
 
 	if (grid.getMan().row == -1) return grid.getMaze();
 
-	vvc maze = grid.getMaze();
+	vector<vector<char>> maze = grid.getMaze();
 	__Cell(maze, grid.getMan()) = EMPTY;
 
 	return maze;
 }
 
-map < vvc, map<char, double> > SokoPan::train(sf::RenderWindow& window, bool isDraw) {
+map < vector<vector<char>>, map<char, double> > SokoPan::train(sf::RenderWindow& window, bool isDraw) {
 	int episodes = 500;//EPISODES;
 	while (episodes--) {
-		int maxLoops = 1000;
+		int maxLoops = 100;
 		Grid state = Grid(generateRandomState());
 		cout << episodes << endl;
 		while (!isFinalGoal(state) && !state.hasDeadlock() && maxLoops--) {
@@ -115,7 +115,7 @@ map < vvc, map<char, double> > SokoPan::train(sf::RenderWindow& window, bool isD
 	return Q;
 }
 
-void SokoPan::solve(vvc maze) {
+void SokoPan::solve(vector<vector<char>> maze) {
 	Grid grid = Grid(maze);
 	Position man = grid.getMan();
 	string dir = "udlr";
@@ -156,7 +156,7 @@ void SokoPan::printR() {
 	}
 }
 
-vvc SokoPan::getNextFram(map < vvc, map<char, double> >& Q, sf::RenderWindow& window, vvc maze) {
+vector<vector<char>> SokoPan::getNextFram(map < vector<vector<char>>, map<char, double> >& Q, sf::RenderWindow& window, vector<vector<char>> maze) {
 
 	Grid grid = Grid(maze);
 	string dir = "udlr";
@@ -180,11 +180,11 @@ vvc SokoPan::getNextFram(map < vvc, map<char, double> >& Q, sf::RenderWindow& wi
 
 bool SokoPan::isInvalidMove(Grid grid, Position::Move move) {
 	Position pos = grid.getMan() + move;
-	vvc maze = grid.getMaze();
+	vector<vector<char>> maze = grid.getMaze();
 	return grid.isOutBorder(pos) || Grid::isTypeCell(maze, pos, { WALL, OUT });
 }
 
-void SokoPan::floodFill(vvc& grid, Position pos) {
+void SokoPan::floodFill(vector<vector<char>>& grid, Position pos) {
 
 	if (!Grid::isTypeCell(grid, pos, EMPTY)) return;
 	__Cell(grid, pos) = OUT;
@@ -196,7 +196,7 @@ void SokoPan::floodFill(vvc& grid, Position pos) {
 
 }
 
-void SokoPan::fillMazeOut(vvc& maze) {
+void SokoPan::fillMazeOut(vector<vector<char>>& maze) {
 	for (int i = 0; i < maze.size(); i++) {
 		floodFill(maze, Position(i, 0));
 		floodFill(maze, Position(i, maze[0].size() - 1));
@@ -209,7 +209,7 @@ void SokoPan::fillMazeOut(vvc& maze) {
 
 bool SokoPan::isFinalGoal(Grid& grid) {
 	if (!grid.isState()) return false;
-	vvc maze = grid.getMaze();
+	vector<vector<char>> maze = grid.getMaze();
 	for (const auto& row : maze) {
 		for (const auto& cell : row) {
 			if (cell == GOAL || cell == BOX) {
@@ -222,7 +222,7 @@ bool SokoPan::isFinalGoal(Grid& grid) {
 
 Grid SokoPan::getActionState(Grid& state, char action) {
 
-	vvc maze = state.getMaze();
+	vector<vector<char>> maze = state.getMaze();
 
 	Position::Move move = Position::Move(action);
 	if (isInvalidMove(state, move)) {
@@ -251,7 +251,7 @@ map<char, Grid> SokoPan::getAllActionStates(Grid& grid) {
 	return actionStates;
 }
 
-double SokoPan::calcTraingProfit(vvc n_state) {
+double SokoPan::calcTraingProfit(vector<vector<char>> n_state) {
 
 	Grid grid = Grid(n_state);
 
@@ -268,7 +268,7 @@ double SokoPan::calcTraingProfit(vvc n_state) {
 	return maxi;
 }
 
-vvc SokoPan::generateGoalState(vvc maze) {
+vector<vector<char>> SokoPan::generateGoalState(vector<vector<char>> maze) {
 	for (int row = 0; row < maze.size(); row++) {
 		for (int col = 0; col < maze[row].size(); col++) {
 			// TODO: check if
@@ -281,7 +281,7 @@ vvc SokoPan::generateGoalState(vvc maze) {
 	return maze;
 }
 
-vvc SokoPan::tryReachGoal(vvc state, Position pos, char ch) {
+vector<vector<char>> SokoPan::tryReachGoal(vector<vector<char>> state, Position pos, char ch) {
 	Position::Move move = Position::Move(ch);
 	Position prePos = pos + move;
 	if (Grid::isTypeCell(state, prePos, EMPTY)) {
@@ -301,14 +301,14 @@ void SokoPan::fill_R() {
 	string direction = "udlr";
 	string invDirection = "durl";
 
-	vvc goalState = generateGoalState(MAZE);
+	vector<vector<char>> goalState = generateGoalState(MAZE);
 	for (int row = 0; row < goalState.size(); row++) {
 		for (int col = 0; col < goalState[row].size(); col++) {
 
 			if (goalState[row][col] == BOX_GOAL) {
 				for (int i = 0; i < direction.size(); i++) {
 
-					vvc preState = tryReachGoal(goalState, Position(row, col), direction[i]);
+					vector<vector<char>> preState = tryReachGoal(goalState, Position(row, col), direction[i]);
 					if (preState.size() == 0) continue;
 					char preMove = invDirection[i];
 					R[preState][preMove] = PROFIT_GOAL;
@@ -321,9 +321,9 @@ void SokoPan::fill_R() {
 	return;
 }
 
-vvc SokoPan::generateRandomState() {
+vector<vector<char>> SokoPan::generateRandomState() {
 
-	vvc maze = getAbstractMaze(Grid(MAZE));
+	vector<vector<char>> maze = getAbstractMaze(Grid(MAZE));
 
 	if (maze.size() == 0) return {};
 
