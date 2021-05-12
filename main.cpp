@@ -6,10 +6,10 @@
 #include <vector>
 #include <map>
 #include "Utils.h"
-#include "LibConstant.hpp"
+//#include "LibConstant.hpp"
 
 using namespace std;
-using namespace LibConstants;
+//using namespace LibConstants;
 
 typedef vector<vector<char>> vvc;
 #define float long double
@@ -542,7 +542,7 @@ pair<char, Grid> getRandomPossibleAction(map<char, Grid>& allActions) {
 }
 
 void run(bool isDraw) {
-	int episodes = 500;//EPISODES;
+	int episodes = 50;//EPISODES;
 	while (episodes--) {
 		int maxLoops = 1000;
 		Grid state = Grid(generateRandomState());
@@ -767,20 +767,24 @@ int main()
 	fill_R();
 	printR();
 
-	string fileName = "Text3.txt";
-
-	run(true);
-	Utils::save(fileName, Q);
+	string fileName = "MAZE4.txt";
+	
+	/*run(true);
+	Utils::save(fileName, Q);*/
 	
 	map < vvc, map<char, float> > temp = Utils::load(fileName);
 	Q = temp;
-	//abd = getNextFram(abd);
 
 	int a, b;
+	cout << "Insert man position: ";
 	while (cin >> a >> b) {
 		p2d(OUTT);
 		Grid g = Grid(MAZE);
 		vvc temp = MAZE;
+		if (!isTypeCell(temp, Position(a, b), { EMPTY })) {
+			cout << "Invalid position" << endl;
+			cout << "Insert man position: ";
+		}
 		__Cell(temp, g.getMan()) = EMPTY;
 		__Cell(temp, Position(a, b)) = MAN;
 		Grid r = Grid(temp);
@@ -789,6 +793,7 @@ int main()
 			r = Grid(temp);
 			system("pause");
 		}
+		cout << "Insert man position: ";
 	}
 
 	window.close();
