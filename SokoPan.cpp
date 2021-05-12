@@ -75,10 +75,13 @@ vector<vector<char>> SokoPan::getAbstractMaze(Grid grid) {
 }
 
 map < vector<vector<char>>, map<char, double> > SokoPan::train(sf::RenderWindow& window, bool isDraw) {
+	
 	int episodes = 500;//EPISODES;
 	while (episodes--) {
+	
 		int maxLoops = 1000;
 		Grid state = Grid(generateRandomState());
+	
 		cout << episodes << endl;
 		while (!isFinalGoal(state) && !state.hasDeadlock() && maxLoops--) {
 
@@ -87,13 +90,11 @@ map < vector<vector<char>>, map<char, double> > SokoPan::train(sf::RenderWindow&
 				episodes++;
 				break;
 			}
+
 			pair<char, Grid> actionsState = getRandomPossibleAction(allActionState);
 			char action = actionsState.first;
 			Grid nextState = actionsState.second;
-			if (isFinalGoal(nextState)) {
-				cout << action << "^^^^^^" << Q[state.getMaze()][action] << endl;
-				Utils::p2d(state.getMaze());
-			}
+
 			double max_q = calcTraingProfit(nextState.getMaze());
 			double profit = R[state.getMaze()][action] + TRAINING_FACTOR * max_q;
 
@@ -104,12 +105,9 @@ map < vector<vector<char>>, map<char, double> > SokoPan::train(sf::RenderWindow&
 
 			}
 
-			//	if (!nextState.hasDeadlock())
 			state = nextState;
 
-
 		}
-		//if (!isFinalGoal(state)) episodes++;
 	}
 
 	return Q;
