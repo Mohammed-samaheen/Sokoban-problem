@@ -769,8 +769,8 @@ int main()
 
 	string fileName = "MAZE4.txt";
 	
-	/*run(true);
-	Utils::save(fileName, Q);*/
+	run(true);
+	Utils::save(fileName, Q);
 	
 	map < vvc, map<char, float> > temp = Utils::load(fileName);
 	Q = temp;
