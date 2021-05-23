@@ -264,11 +264,22 @@ vvc MAZE3 =
  {'W','W','W','W','W','W','W','W','W'},
  {'W','W',' ',' ',' ','W','M',' ','W'},
  {'W','W',' ',' ',' ',' ','B',' ','W'},
- {'W','W',' ',' ',' ','W',' ',' ','W'},
- {'W','W','W','W','W','W','B','G','W'},
- {'W','W','W','W','W','W',' ','G','W'},
+ {'W','W',' ',' ',' ','W','W',' ','W'},
+ {'W','W','W','W','W','W','W','G','W'},
+ {'W','W','W','W','W','W','W','W','W'},
  {'W','W','W','W','W','W','W','W','W'} };
 
+vvc MAZE5 =
+{ 
+{' ',' ',' ','W','W','W','W','W',' '},
+{' ','W','W','W','W','W','W','W',' '},
+{' ','W','W','W',' ','M',' ','W',' '},
+{' ','W','W','W',' ',' ',' ','W',' '},
+{' ','W','W','W','W',' ',' ','W',' '},
+{' ','W','W','W','G','B','W','W','W'},
+{' ','W','W','W','W','W','W','W','W'},
+{' ','W','W','W','W','W','W','W','W'},
+{' ','W','W','W','W','W','W','W','W'} };
 
 void draw(sf::RenderWindow& window, vvc maze);
 
@@ -354,6 +365,24 @@ void p2d(vvc v) {
 	for (auto it : v) {
 		for (auto a : it) {
 			cout << a << " ";
+		}
+		cout << endl;
+	}
+	cout << endl;
+}
+
+void p2dIdx(vvc v) {
+	if (v.size() == 0) return;
+	cout << "  ";
+	for (int i = 0; i < v[0].size(); i++) {
+		cout << i << " ";
+	}
+	cout << endl; 
+
+	for (int i = 0; i < v.size(); i++) {
+		cout << i << " ";
+		for (int j = 0; j < v[i].size(); j++) {
+			cout << v[i][j] << " ";
 		}
 		cout << endl;
 	}
@@ -541,7 +570,7 @@ pair<char, Grid> getRandomPossibleAction(map<char, Grid>& allActions) {
 	}
 }
 
-void run(bool isDraw) {
+void train(bool isDraw) {
 	int episodes = 50;//EPISODES;
 	while (episodes--) {
 		int maxLoops = 1000;
@@ -703,6 +732,13 @@ void draw(sf::RenderWindow& window, vvc maze) {
 
 	window.clear();
 
+	sf::Event event;
+	while (window.pollEvent(event))
+	{
+		if (event.type == sf::Event::Closed)
+			window.close();
+	}
+
 	int yPos = 0, xPos = 0;
 	for (int i = 0; i < 9; i++) {
 		for (int j = 0; j < 9; j++) {
@@ -769,30 +805,40 @@ int main()
 
 	string fileName = "MAZE4.txt";
 	
-	/*run(true);
+	/*train(true);
 	Utils::save(fileName, Q);*/
 	
 	map < vvc, map<char, float> > temp = Utils::load(fileName);
 	Q = temp;
 
 	int a, b;
+
+	p2dIdx(getAbstractMaze(MAZE));
 	cout << "Insert man position: ";
 	while (cin >> a >> b) {
-		p2d(OUTT);
+		
 		Grid g = Grid(MAZE);
 		vvc temp = MAZE;
-		if (!isTypeCell(temp, Position(a, b), { EMPTY })) {
+		if (!isTypeCell(temp, Position(a, b), { EMPTY, GOAL })) {
 			cout << "Invalid position" << endl;
 			cout << "Insert man position: ";
 		}
 		__Cell(temp, g.getMan()) = EMPTY;
-		__Cell(temp, Position(a, b)) = MAN;
+		if (__Cell(temp, Position(a, b)) == EMPTY)
+			__Cell(temp, Position(a, b)) = MAN;
+		else 
+			__Cell(temp, Position(a, b)) = MAN_GOAL;
+
 		Grid r = Grid(temp);
+		draw(window, temp);
+		system("pause");
 		while (!isFinalGoal(r)) {
 			temp = getNextFram(temp);
 			r = Grid(temp);
 			system("pause");
 		}
+		
+		p2dIdx(getAbstractMaze(MAZE));
 		cout << "Insert man position: ";
 	}
 
