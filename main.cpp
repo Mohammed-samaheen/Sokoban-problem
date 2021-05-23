@@ -276,7 +276,7 @@ vvc MAZE5 =
 {' ','W','W','W',' ','M',' ','W',' '},
 {' ','W','W','W',' ',' ',' ','W',' '},
 {' ','W','W','W','W',' ',' ','W',' '},
-{' ','W','W','W','G','B','W','W','W'},
+{' ','W','W','W','G','B',' ','W','W'},
 {' ','W','W','W','W','W','W','W','W'},
 {' ','W','W','W','W','W','W','W','W'},
 {' ','W','W','W','W','W','W','W','W'} };
@@ -573,7 +573,7 @@ pair<char, Grid> getRandomPossibleAction(map<char, Grid>& allActions) {
 void train(bool isDraw) {
 	int episodes = 50;//EPISODES;
 	while (episodes--) {
-		int maxLoops = 1000;
+		int maxLoops = 2000;
 		Grid state = Grid(generateRandomState());
 		cout << episodes << endl;
 		while (!isFinalGoal(state) && !state.hasDeadlock() && maxLoops--) {
@@ -594,6 +594,7 @@ void train(bool isDraw) {
 			float profit = R[state.getMaze()][action] + TRAINING_FACTOR * max_q;
 
 			Q[state.getMaze()][action] = profit;
+			cout << "SIZE Q: " << Q.size() << " " << Q[state.getMaze()].size() << endl;
 
 			if (isDraw) {
 				draw(window, state.getMaze());
@@ -797,8 +798,8 @@ void draw(sf::RenderWindow& window, vvc maze) {
 int main()
 {
 
-	MAZE = MAZE2;
-	string fileName = "MAZE2.txt";
+	MAZE = MAZE4;
+	string fileName = "MAZE4.txt";
 
 
 	fillMazeOut(MAZE);
@@ -807,7 +808,7 @@ int main()
 	printR();
 
 	
-	train(false);
+	train(true);
 	Utils::save(fileName, Q);
 	
 	map < vvc, map<char, float> > temp = Utils::load(fileName);
