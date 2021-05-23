@@ -586,7 +586,7 @@ void train(bool isDraw) {
 			pair<char, Grid> actionsState = getRandomPossibleAction(allActionState);
 			char action = actionsState.first;
 			Grid nextState = actionsState.second;
-			if (isFinalGoal(nextState)) {
+			if (isFinalGoal(nextState) && isDraw) {
 				cout << action << "^^^^^^" << Q[state.getMaze()][action] << endl;
 				p2d(state.getMaze());
 			}
@@ -797,16 +797,18 @@ void draw(sf::RenderWindow& window, vvc maze) {
 int main()
 {
 
-	MAZE = MAZE4;
+	MAZE = MAZE2;
+	string fileName = "MAZE2.txt";
+
+
 	fillMazeOut(MAZE);
 
 	fill_R();
 	printR();
 
-	string fileName = "MAZE4.txt";
 	
-	/*train(true);
-	Utils::save(fileName, Q);*/
+	train(false);
+	Utils::save(fileName, Q);
 	
 	map < vvc, map<char, float> > temp = Utils::load(fileName);
 	Q = temp;
